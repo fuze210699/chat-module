@@ -8,12 +8,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/atoms/tabs";
+import apiClient from "@/lib/api-client";
+import { LOGIN_ROUTES, SIGNUP_ROUTES } from "@/utils/constant";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleChangeEmail = (e) => {
     setEmail(e.target.value);
@@ -27,9 +32,63 @@ const Auth = () => {
     setConfirmPassword(e.target.value);
   };
 
-  const handleLogin = async () => {};
+  const validateSignup = () => {
+    if (!email.length) {
+      toast.error("Email is required");
+      return false;
+    }
+    if (!password.length) {
+      toast.error("Password is required");
+      return false;
+    }
+    if (password !== confirmPassword) {
+      toast.error("Password and confirm password should be same");
+      return false;
+    }
+    return true;
+  };
 
-  const handleSignup = async () => {};
+  const validateLogin = () => {
+    if (!email.length) {
+      toast.error("Email is required");
+      return false;
+    }
+    if (!password.length) {
+      toast.error("Password is required");
+      return false;
+    }
+    return true;
+  };
+
+  const handleLogin = async () => {
+    if (validateLogin()) {
+      const res = await apiClient.post(
+        LOGIN_ROUTES,
+        { email, password },
+        { withCredentials: true }
+      );
+      if(res.data.user.id){
+        if(res.data.user.profileSetup){
+          navigate("/chat")
+        }else{
+          navigate("/profile")
+        }
+      }
+    }
+  };
+
+  const handleSignup = async () => {
+    if (validateSignup()) {
+      const res = await apiClient.post(
+        SIGNUP_ROUTES,
+        { email, password },
+        { withCredentials: true }
+      );
+      if(res.status === 201){
+        navigate("/profile")
+      }
+    }
+  };
 
   return (
     <div className="h-[100vh] w-[100vw] flex items-center justify-center">
